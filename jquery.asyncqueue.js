@@ -1,3 +1,9 @@
+/*
+* This file is part of the jquery plugin "asyncQueue".
+*
+* (c) Sebastien Roch <roch.sebastien@gmail.com>
+*
+*/
 (function($){
     $.asyncQueue = function(failure) {
         var that = this,
@@ -13,10 +19,7 @@
             if (f) {
                 f.apply(that, [that]);
                 if (paused === false) {
-                    console.log('calling next func');
                     _run();
-                } else {
-                    console.log('queue paused');
                 }
             }
         }
@@ -36,14 +39,12 @@
         }
 
         this.run = function() {
-            console.log('run');
             paused = false;
             _run();
         }
 
         this.pause = function () {
             paused = true;
-            console.log('pause called');
             return this;
         }
 

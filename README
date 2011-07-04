@@ -1,0 +1,35 @@
+usage example:
+
+var func1 = function(q) {
+    console.log('func 1 called', arguments, this);
+    q.pause();
+    window.setTimeout(function() {
+        q.storeData({item: {id:89, title: 'petite liste'}});
+        q.run();
+    }, 1000);
+}
+
+var func2 = function(q) {
+    console.log('func 2 called', arguments, this);
+    console.log(q.lastCallbackData());
+    window.setTimeout(function() {}, 1000);
+}
+
+var func3 = function(q) {
+    console.log('func 3 called', arguments, this);
+    q.onFailure({msg: 'no error'});
+    window.setTimeout(function() {}, 1000);
+}
+
+var func4 = function(q) {
+    var o = {i: 1897};
+    var f = function (a, b) {
+        console.log('I\'m the holy function', arguments, this);
+    }
+    return f.apply(o, [1,2]);
+}
+
+var q = new $.asyncQueue(function() {console.log('failure!', arguments)});
+q.add(func1).add(func2).add(func3).add(func4);
+q.add(function() {console.log('finished!')});
+q.run();
