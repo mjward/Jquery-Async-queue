@@ -1,35 +1,67 @@
-usage example:
+usage example (PSEUDO JS CODE):
 
-var func1 = function(q) {
-    console.log('func 1 called', arguments, this);
+var storeItemOnline = function(q, itemDetails) {
+    console.log('storeItemOnline');
+
+    // pause the queue until we're finished
     q.pause();
-    window.setTimeout(function() {
-        q.storeData({item: {id:89, title: 'petite liste'}});
+
+    function onSuccess(json) {
+        // store the received data in the queue object,
+        // it will be used by the next function in the queue
+        q.storeData(json.item);
+
+        // resume queue execution
         q.run();
-    }, 1000);
-}
-
-var func2 = function(q) {
-    console.log('func 2 called', arguments, this);
-    console.log(q.lastCallbackData());
-    window.setTimeout(function() {}, 1000);
-}
-
-var func3 = function(q) {
-    console.log('func 3 called', arguments, this);
-    q.onFailure({msg: 'no error'});
-    window.setTimeout(function() {}, 1000);
-}
-
-var func4 = function(q) {
-    var o = {i: 1897};
-    var f = function (a, b) {
-        console.log('I\'m the holy function', arguments, this);
     }
-    return f.apply(o, [1,2]);
+
+    function onError() {
+        // call the failure function of the queue
+        q.failure(arguments);
+    }
+
+    // execute your ajax request
+    ajax.send(..., onSuccess, onError);
 }
 
-var q = new $.asyncQueue(function() {console.log('failure!', arguments)});
-q.add(func1).add(func2).add(func3).add(func4);
-q.add(function() {console.log('finished!')});
+var storeItemDb = function(q, item) {
+    console.log('storeItemDb', arguments);
+
+    // pause the queue
+    q.pause();
+
+    function onSuccess (sqlTransaction, sqlResults) {
+        // resume queue execution
+        q.run();
+    }
+
+    function onError () {
+        // do whatever you want...
+        // but at the end, call the failure function
+        // of the queue to let it know
+        q.failure(arguments);
+    }
+
+    // execute the transaction
+    db.transaction(
+        function(tx) {
+            var sql = "INSERT OR REPLACE INTO item (title) VALUES(?);";
+            tx.executeSql(sql, [item.title]);
+        },
+        onError,
+        onSuccess
+    );
+}
+
+var q = new $.AsyncQueue();
+q.onFailure(function() {
+    console.log('FAILURE, these are the arguments:', arguments);
+});
+q.add(function(q) {
+    storeItemOnline(q, {"title": "my item"});
+});
+q.add(function(q) {
+    storeItemDb(q, q.lastCallbackData());
+});
+q.add(function(q) {console.log('finished!')});
 q.run();
