@@ -3,12 +3,14 @@
 *
 * (c) Sebastien Roch <roch.sebastien@gmail.com>
 *
+* For the full copyright and license information, please view the LICENSE
+* file that was distributed with this source code.
 */
 (function($){
-    $.asyncQueue = function(failure) {
+    $.AsyncQueue = function() {
         var that = this,
             queue = [],
-            fail,
+            failureFunc,
             paused = false,
             lastCallbackData,
             _run;
@@ -22,6 +24,10 @@
                     _run();
                 }
             }
+        }
+
+        this.onFailure = function(func) {
+            failureFunc = func;
         }
 
         this.add = function(func) {
@@ -48,14 +54,14 @@
             return this;
         }
 
-        this.onFailure = function() {
+        this.failure = function() {
             paused = true;
-            if (failure) {
+            if (failureFunc) {
                 var args = [that];
                 for(i = 0; i < arguments.length; i++) {
                     args.push(arguments[i]);
                 }
-                failure.apply(that, args);
+                failureFunc.apply(that, args);
             }
         }
 
