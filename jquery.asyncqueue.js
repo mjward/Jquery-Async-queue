@@ -11,6 +11,7 @@
         var that = this,
             queue = [],
             failureFunc,
+            completeFunc,
             paused = false,
             lastCallbackData,
             _run;
@@ -23,11 +24,20 @@
                 if (paused === false) {
                     _run();
                 }
+            } else {
+                if(completeFunc){
+                    console.log('QUEUE HAS ENDED');
+                    completeFunc.apply(that);
+                }
             }
         }
 
         this.onFailure = function(func) {
             failureFunc = func;
+        }
+
+        this.onComplete = function(func) {
+            completeFunc = func;
         }
 
         this.add = function(func) {
@@ -44,7 +54,7 @@
             return lastCallbackData;
         }
 
-        this.run = function() {
+        this.run = function() {
             paused = false;
             _run();
         }
